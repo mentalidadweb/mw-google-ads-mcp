@@ -108,6 +108,11 @@ def _create_credentials() -> google.auth.credentials.Credentials:
         # Create credentials using the access token provided by FastMCP
         return Credentials(token=token_obj.token)
 
+    # Mentalidad Web: never fall back to server credentials in remote mode.
+    from ads_mcp.mw_seguridad import forbid_server_credentials_in_remote_mode
+
+    forbid_server_credentials_in_remote_mode()
+
     with prevent_stdio_inheritance():
         credentials, _ = google.auth.default(scopes=[_ADS_SCOPE])
     return credentials

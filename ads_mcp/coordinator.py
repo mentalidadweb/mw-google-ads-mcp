@@ -56,7 +56,10 @@ if _CLIENT_ID and _CLIENT_SECRET:
     if client_storage is not None:
         provider_kwargs["client_storage"] = client_storage
 
-    auth = GoogleProvider(**provider_kwargs)
+    # Mentalidad Web: optional email domain restriction.
+    from ads_mcp.mw_seguridad import build_google_provider
+
+    auth = build_google_provider(GoogleProvider, **provider_kwargs)
     mcp = FastMCP("Google Ads Server", auth=auth)
 else:
     mcp = FastMCP("Google Ads Server")

@@ -1,0 +1,15 @@
+# Configuración de Railway para el servidor MCP de Google Ads (Mentalidad Web).
+# Esquema: https://railway.com/railway.schema.json
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Una sola réplica: los tokens OAuth se guardan en el volumen montado en /data
+# y Railway no permite réplicas en servicios con volumen.
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+# Sin healthcheckPath: el servidor no expone una ruta de salud y /mcp responde
+# 401 sin autenticación, así que no sirve como chequeo.
