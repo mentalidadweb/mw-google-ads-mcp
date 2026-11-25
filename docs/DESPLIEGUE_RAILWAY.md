@@ -6,7 +6,7 @@ Esta guía deja el servidor MCP de Google Ads en Railway para que el equipo de M
 
 1. Google Cloud: pantalla de consentimiento Interna, scope `adwords` y cliente OAuth web con dos URIs de redirección.
 2. Railway: servicio desde el repo, dominio, volumen en `/data`, variables, una réplica y nuevo despliegue.
-3. Claude: conector personalizado con `https://DOMINIO/mcp` y el client id y secret.
+3. Claude: conector personalizado con `https://DOMINIO/mcp` y el cliente OAuth de Claude (CIMD).
 4. Cada persona: passkey, acceso de lectura en Google Ads con su correo de mentalidadweb.com y primera prueba.
 5. Pruebas de aceptación.
 
@@ -29,16 +29,16 @@ Trabaja en el proyecto de Google Cloud que tiene aprobado el acceso Basic a la G
    - `https://www.googleapis.com/auth/adwords`
    - `openid`, `https://www.googleapis.com/auth/userinfo.email` y `https://www.googleapis.com/auth/userinfo.profile` (el servidor los exige para identificar a la persona).
 4. En **Clientes**, crea un cliente OAuth de tipo **Web application**.
-5. En **URIs de redireccionamiento autorizados**, registra exactamente estas dos:
+5. En **URIs de redireccionamiento autorizados**, registra:
 
    | URI | Para qué sirve |
    | --- | --- |
-   | `https://claude.ai/api/mcp/auth_callback` | Retorno de Claude al terminar la conexión del conector. |
-   | `https://DOMINIO/auth/callback` | Retorno de Google al servidor (proxy OAuth). Es `GOOGLE_ADS_MCP_BASE_URL` más `/auth/callback`. |
+   | `https://DOMINIO/auth/callback` | Retorno de Google al servidor (proxy OAuth). Es `GOOGLE_ADS_MCP_BASE_URL` más `/auth/callback`. Es la única URI que Google usa. |
+   | `https://claude.ai/api/mcp/auth_callback` | Opcional. Es el retorno de Claude, pero Claude vuelve desde nuestro servidor, no desde Google. Tenerla registrada no causa problemas. |
 
-   La ruta `/auth/callback` es el valor por defecto de `redirect_path` en el `GoogleProvider` de FastMCP (`OAuthProxy` usa `"/auth/callback"` cuando no se indica otra) y este servidor no la cambia. Usa el dominio final de Railway, sin barra al final y con `https`.
+   La ruta `/auth/callback` es el valor por defecto de `redirect_path` en el `GoogleProvider` de FastMCP (`OAuthProxy` usa `"/auth/callback"` cuando no se indica otra) y este servidor no la cambia. Usa el dominio final (por ejemplo `https://ads-mcp.mentalidadweb.com`), sin barra al final y con `https`.
 
-6. Guarda el **client id** y el **client secret**. Los cargarás en Railway y en Claude.
+6. Guarda el **client id** y el **client secret**. Solo se cargan en Railway: Claude no los usa.
 
 > Si todavía no tienes el dominio de Railway, crea primero el servicio (paso b.2), copia el dominio y vuelve a este punto.
 
@@ -90,10 +90,11 @@ No hay healthcheck configurado: el servidor no expone una ruta de salud y `/mcp`
 
 ## c. Claude
 
-1. En Claude, ve a **Configuración > Conectores > Agregar conector personalizado**.
-2. URL: `https://DOMINIO/mcp`.
-3. En la configuración avanzada de OAuth, ingresa el **client id** y el **client secret** del cliente OAuth web.
-4. Guarda. Si la organización usa conectores administrados, publícalo para el equipo desde la configuración de la organización.
+1. Como administrador de la organización, ve a **Configuración de la organización > Conectores > Agregar > Conector personalizado**.
+2. **URL del servidor:** `https://DOMINIO/mcp`. **Nombre:** por ejemplo `Google Ads Mentalidad Web`.
+3. **Método de inicio de sesión:** OAuth (Claude lo detecta solo).
+4. **Cliente OAuth:** deja **Cliente OAuth de Claude (CIMD)**. No ingreses el client id ni el secret de Google: Claude se registra ante nuestro servidor, y el servidor es el único que habla con Google. El servidor no acepta autenticación de clientes con secret.
+5. Pulsa **Agregar**. Cada persona se conecta después con su propia cuenta.
 
 ## d. Onboarding de cada persona
 
@@ -115,9 +116,9 @@ No hay healthcheck configurado: el servidor no expone una ruta de salud y `/mcp`
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
-| `redirect_uri_mismatch` al iniciar sesión | Falta una URI de redirección o no coincide exactamente (http en vez de https, barra final, dominio antiguo). | Registra `https://claude.ai/api/mcp/auth_callback` y `https://DOMINIO/auth/callback` en el cliente OAuth. Revisa que `GOOGLE_ADS_MCP_BASE_URL` sea igual a `https://DOMINIO`. |
+| `redirect_uri_mismatch` al iniciar sesión | Falta la URI de redirección del servidor o no coincide exactamente (http en vez de https, barra final, dominio antiguo). | Registra `https://DOMINIO/auth/callback` en el cliente OAuth de Google. Revisa que `GOOGLE_ADS_MCP_BASE_URL` sea igual a `https://DOMINIO`. |
 | `USER_PERMISSION_DENIED` | La cuenta se administra a través de una MCC y la consulta no indica `login_customer_id`, o se indicó una MCC a la que la persona no tiene acceso. | Indica en la consulta la MCC correcta de esa persona. No definas `GOOGLE_ADS_LOGIN_CUSTOMER_ID` en Railway. |
-| `CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION` | El cliente OAuth pertenece a un proyecto de Google Cloud sin acceso Basic aprobado. | Crea el cliente OAuth en el proyecto con acceso Basic y actualiza client id y secret en Railway y en Claude. |
+| `CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION` | El cliente OAuth pertenece a un proyecto de Google Cloud sin acceso Basic aprobado. | Crea el cliente OAuth en el proyecto con acceso Basic y actualiza client id y secret en Railway. |
 | Todos deben reconectarse tras cada reinicio | No hay volumen en `/data` o las variables de almacenamiento apuntan a otra ruta. | Monta el volumen en `/data` y revisa `GOOGLE_ADS_MCP_STORAGE_PATH=/data/oauth`. No cambies las claves de cifrado ni la de JWT: al cambiarlas se invalidan las sesiones guardadas. |
 | 401 permanente para una persona de la empresa | La cuenta no es de Google Workspace de mentalidadweb.com o su correo no está verificado. | Confirma que entra con la cuenta corporativa y no con una cuenta personal. |
 | "No hay un token de usuario para esta solicitud" | La sesión expiró o se perdió. | Desconecta y vuelve a conectar el conector en Claude. |
