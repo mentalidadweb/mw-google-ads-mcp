@@ -59,9 +59,13 @@ def get_write_allowed_emails() -> frozenset[str]:
 
 
 def is_read_only_tool(tool: Tool) -> bool:
-    """Returns True only when the tool declares ``readOnlyHint=True``."""
-    annotations = tool.annotations
-    return annotations is not None and annotations.readOnlyHint is True
+    """Returns True only when the tool declares ``readOnlyHint=True``.
+
+    Reads the MCP SDK v2 field name ``read_only_hint``; the camelCase
+    ``readOnlyHint`` attribute only exists as a deprecated FastMCP alias.
+    """
+    read_only_hint = getattr(tool.annotations, "read_only_hint", None)
+    return read_only_hint is True
 
 
 class WriteAccessCheck:

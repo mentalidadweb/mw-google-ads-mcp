@@ -23,7 +23,7 @@ No agrega herramientas nuevas: habilita las que ya trae el servidor de Google y 
 
 **No se puede** pausar ni activar campañas, cambiar presupuestos, pujas o estrategias, ni crear o editar anuncios y keywords. El servidor no tiene herramientas para eso.
 
-`upload_video_asset` queda **siempre desactivada**. Esa herramienta sube a YouTube un archivo del disco del servidor, y en Railway podría usarse para leer archivos internos.
+`upload_video_asset` queda **siempre desactivada**. Esa herramienta sube a YouTube un archivo del disco del servidor, y en Railway podría usarse para leer archivos internos. Además corre como tarea en segundo plano, y las consultas posteriores sobre una tarea (`tasks/get`, `tasks/cancel`) no pasan por la lista. No la agregues a `tools_config_escritura.yaml`.
 
 ## Variables de entorno
 
@@ -31,7 +31,7 @@ No agrega herramientas nuevas: habilita las que ya trae el servidor de Google y 
 | --- | --- | --- |
 | `GOOGLE_ADS_MCP_TOOLS_CONFIG` | `/app/tools_config_escritura.yaml` | Para volver a solo lectura, usa `/app/tools_config.yaml`. |
 | `GOOGLE_ADS_MCP_WRITE_ALLOWED_EMAILS` | `ana@mentalidadweb.com,juan@mentalidadweb.com` | Correos completos, separados por comas. No distingue mayúsculas. Los espacios se ignoran. |
-| `GOOGLE_ADS_MCP_ALLOWED_DOMAINS` | `mentalidadweb.com` | Se mantiene igual. Una persona de la lista igual debe pertenecer a un dominio permitido. |
+| `GOOGLE_ADS_MCP_ALLOWED_DOMAINS` | `mentalidadweb.com` | **Obligatoria en este modo.** La lista de escritura compara el correo exacto, pero es esta variable la que exige una cuenta de Google Workspace del dominio. Sin ella, una cuenta personal de Google registrada con un correo de la lista podría pasar. |
 
 Las demás variables no cambian (ver [DESPLIEGUE_RAILWAY.md](DESPLIEGUE_RAILWAY.md)).
 
