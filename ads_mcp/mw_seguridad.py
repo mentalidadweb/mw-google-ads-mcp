@@ -69,6 +69,34 @@ def get_allowed_domains() -> frozenset[str]:
     return frozenset(domains)
 
 
+def get_verified_email(claims: dict | None) -> str | None:
+    """Returns the normalized email of a verified Google identity.
+
+    Args:
+        claims: The ``AccessToken.claims`` built by FastMCP's
+            ``GoogleTokenVerifier``.
+
+    Returns:
+        The email in lower case, or ``None`` when the claims are missing, the
+        email is not verified (``email_verified`` must be true) or the email
+        is malformed.
+    """
+    if not claims:
+        return None
+
+    verified = claims.get("email_verified")
+    if verified is not True and str(verified).lower() != "true":
+        return None
+
+    email = claims.get("email")
+    if not isinstance(email, str):
+        return None
+    email = email.strip().lower()
+    if email.count("@") != 1 or email.startswith("@") or email.endswith("@"):
+        return None
+    return email
+
+
 def is_identity_allowed(
     claims: dict | None, allowed_domains: frozenset[str]
 ) -> bool:
@@ -92,14 +120,10 @@ def is_identity_allowed(
     if not claims or not allowed_domains:
         return False
 
-    verified = claims.get("email_verified")
-    if verified is not True and str(verified).lower() != "true":
+    email = get_verified_email(claims)
+    if email is None:
         return False
-
-    email = claims.get("email")
-    if not isinstance(email, str) or email.count("@") != 1:
-        return False
-    email_domain = email.rsplit("@", 1)[1].strip().lower()
+    email_domain = email.rsplit("@", 1)[1]
     if email_domain not in allowed_domains:
         return False
 
