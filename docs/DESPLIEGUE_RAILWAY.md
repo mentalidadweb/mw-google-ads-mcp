@@ -128,3 +128,4 @@ No hay healthcheck configurado: el servidor no expone una ruta de salud y `/mcp`
 - Restricción de dominio: `ads_mcp/mw_seguridad.py`, clase `DomainRestrictedGoogleProvider`. Exige `email_verified`, que el dominio del correo esté en la lista y que el dominio de Workspace (`hd`, entregado por el endpoint userinfo de Google) también lo esté. Se aplica en `verify_token`, el método que el backend de autenticación llama en cada solicitud HTTP.
 - Bloqueo de credenciales del servidor: `forbid_server_credentials_in_remote_mode`, llamado desde `ads_mcp/utils.py` antes del respaldo con Application Default Credentials.
 - Tests: `tests/mw_seguridad_test.py`.
+- Escritura solo para una lista de correos: ver [MANUAL_ESCRITURA.md](MANUAL_ESCRITURA.md).

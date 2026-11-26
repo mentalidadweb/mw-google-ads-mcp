@@ -1,0 +1,18 @@
+# Configuración con escritura restringida (Mentalidad Web).
+#
+# Se activa con GOOGLE_ADS_MCP_TOOLS_CONFIG=/app/tools_config_escritura.yaml.
+# Las herramientas de escritura solo aparecen para los correos de
+# GOOGLE_ADS_MCP_WRITE_ALLOWED_EMAILS. Ver docs/MANUAL_ESCRITURA.md.
+#
+# upload_video_asset queda fuera a propósito: sube a YouTube un archivo del
+# disco del servidor y en un despliegue remoto podría exponer archivos internos.
+
+namespaces:
+  customers: true
+  search: true
+  metadata: true
+  labels: true
+  assets:
+    enabled: true
+    enabled_tools:
+      - create_asset

@@ -73,6 +73,11 @@ mcp.add_middleware(
     )
 )
 
+# Mentalidad Web: write tools only for GOOGLE_ADS_MCP_WRITE_ALLOWED_EMAILS.
+from ads_mcp.mw_escritura import install_write_access_middleware
+
+install_write_access_middleware(mcp)
+
 
 def ensure_subscriptions_listen(server: FastMCP) -> bool:
     """Register the MCP 2026 subscription stream when FastMCP omits it.
